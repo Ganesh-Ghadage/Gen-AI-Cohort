@@ -40,12 +40,22 @@ system_prompt = """
     3. Ab @coolifyio jaise projects ki hum baat nhi krenge to kon krega Self host coolify on @Hostinger ChaiAurCode YouTube channel pe available h video, enjoy
 """
 
-responce = client.chat.completions.create(
+messages = [
+  {"role": "system", "content": system_prompt}
+]
+
+while True:
+  query = input("> ")
+  messages.append({"role": "user", "content": query})
+
+  if query.upper() == "EXIT":
+    break
+  
+  responce = client.chat.completions.create(
     model="gemini-2.5-flash",
-    messages=[
-      {"role": "system", "content": system_prompt},
-      {"role": "user", "content": "Muje kya karna cahiye java ya javascript"}
-    ]
+    messages=messages
   )
 
-print(responce.choices[0].message.content)
+  messages.append({"role": "assistant", "content": responce.choices[0].message.content})
+
+  print(f"🤖 : {responce.choices[0].message.content}")
