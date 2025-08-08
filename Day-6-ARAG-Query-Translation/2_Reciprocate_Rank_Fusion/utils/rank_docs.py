@@ -2,7 +2,7 @@ from typing import List, Dict
 from collections import defaultdict
 from langchain_core.documents import Document
 
-def reciprocal_rank_fusion(
+def rank_documents(
   docs: List[Document],
   k: int = 60
 ) -> List[Document]:

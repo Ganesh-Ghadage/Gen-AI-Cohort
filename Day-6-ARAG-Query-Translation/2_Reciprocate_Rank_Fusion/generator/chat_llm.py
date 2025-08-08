@@ -1,7 +1,7 @@
 import os
 from openai import OpenAI
 
-from retriever.retrival import parallel_query_retriver
+from retriever.retrival import reciprocal_rank_fusion
 
 api_key = os.getenv("GEMINI_API_KEY")
 
@@ -11,7 +11,7 @@ client = OpenAI(
 )
 
 def llm_chat(query: str):
-  search_results =  parallel_query_retriver(query)
+  search_results =  reciprocal_rank_fusion(query)
   
   context = "\n\n"
   for _ , doc in enumerate(search_results, 1):

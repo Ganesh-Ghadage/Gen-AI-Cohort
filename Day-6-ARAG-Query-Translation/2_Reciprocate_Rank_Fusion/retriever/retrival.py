@@ -8,7 +8,7 @@ from langchain_core.documents import Document
 from utils.output_parser import output_parser
 from config.vector_store import get_vector_store
 from llm.prompt_templates import QUERY_REWRITE_PROMPT
-from utils.rank_docs import reciprocal_rank_fusion
+from utils.rank_docs import rank_documents
 
 # ----- setup --------
 
@@ -25,7 +25,7 @@ llm = ChatGoogleGenerativeAI(
 
 llm_chain = QUERY_REWRITE_PROMPT | llm | output_parser
 
-def parallel_query_retriver(
+def reciprocal_rank_fusion(
   user_query: str, 
   llm_chain=llm_chain, 
   retriever=qdrant.as_retriever()
@@ -56,7 +56,7 @@ def parallel_query_retriver(
       all_docs.extend(docs)
 
   # Step 3: Rank docs    
-  sorted_docs = reciprocal_rank_fusion(all_docs)
+  sorted_docs = rank_documents(all_docs)
   
   # print("--------- sorted docs ------")
   # print(f"\nTotal sorted documents: {len(sorted_docs)}")
