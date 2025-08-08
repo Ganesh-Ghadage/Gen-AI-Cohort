@@ -14,7 +14,8 @@ def llm_chat(query: str):
   search_results =  parallel_query_retriver(query)
   
   context = "\n\n"
-  for doc in enumerate(search_results, 1):
+  for doc in search_results:
+    # print(doc)
     context += f"Page Content: {doc.page_content}\nPage Number: {doc.metadata['page_label']}\nFile Location: {doc.metadata['source']} \n\n"
 
 

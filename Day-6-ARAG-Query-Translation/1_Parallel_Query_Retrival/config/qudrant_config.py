@@ -7,7 +7,6 @@ def get_qdrant_client():
   client = QdrantClient(url="http://localhost:6333")
   
   if COLLECTION_NAME not in [c.name for c in client.get_collections().collections]:
-    print("if cond")
     client.create_collection(
       collection_name=COLLECTION_NAME,
       vectors_config=VectorParams(size=3072, distance=Distance.COSINE),

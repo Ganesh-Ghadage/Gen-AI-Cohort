@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 
 from langchain_qdrant import QdrantVectorStore
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -7,12 +8,53 @@ from langchain_core.output_parsers import BaseOutputParser
 from typing import List, Dict
 import concurrent.futures
 
-from utils.output_parser import output_parser
-from config.vector_store import get_vector_store
-from llm.prompt_templates import QUERY_REWRITE_PROMPT
+# from utils.output_parser import output_parser
+# from config.vector_store import get_vector_store
+# from llm.prompt_templates import QUERY_REWRITE_PROMPT
+
+from qdrant_client import QdrantClient
+from qdrant_client.models import Distance, VectorParams
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
+load_dotenv()
+
+embeddings = GoogleGenerativeAIEmbeddings(
+  model="models/gemini-embedding-001",
+  google_api_key=os.getenv("GEMINI_API_KEY")
+)
+
+class LineListOutputParser(BaseOutputParser[List[str]]):
+  """Output parser for a list of lines."""
+
+  def parse(self, text: str) -> List[str]:
+    lines = text.strip().split("\n")
+    return list(filter(None, lines)) 
+  
+COLLECTION_NAME = "nodejs_document"
+
+def get_qdrant_client():
+  client = QdrantClient(url="http://localhost:6333")
+  
+  if COLLECTION_NAME not in [c.name for c in client.get_collections().collections]:
+    client.create_collection(
+      collection_name=COLLECTION_NAME,
+      vectors_config=VectorParams(size=3072, distance=Distance.COSINE),
+    )
+    
+  return client
+
+def get_vector_store():
+    client = get_qdrant_client()
+    return QdrantVectorStore(
+        client=client,
+        collection_name=COLLECTION_NAME,
+        embedding=embeddings,
+    )
 
 # ----- setup --------
 qdrant = get_vector_store()
+
+output_parser = LineListOutputParser()
 
 llm = ChatGoogleGenerativeAI(
   model="gemini-2.5-flash",
@@ -21,6 +63,16 @@ llm = ChatGoogleGenerativeAI(
   max_tokens=None,
   timeout=None,
   max_retries=2,
+)
+
+QUERY_REWRITE_PROMPT = PromptTemplate(
+  input_variables=["question"],
+  template="""You are an AI language model assistant. Your task is to generate five 
+  different versions of the given user question to retrieve relevant documents from a vector 
+  database. By generating multiple perspectives on the user question, your goal is to help
+  the user overcome some of the limitations of the distance-based similarity search. 
+  Provide these alternative questions separated by newlines.
+  Original question: {question}""",
 )
 
 llm_chain = QUERY_REWRITE_PROMPT | llm | output_parser
