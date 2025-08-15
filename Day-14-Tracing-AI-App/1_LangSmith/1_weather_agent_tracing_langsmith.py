@@ -3,15 +3,17 @@ from dotenv import load_dotenv
 import os
 import json
 import requests
+from langsmith.wrappers import wrap_openai
+from langsmith import traceable
 
 load_dotenv()
 
-client = OpenAI(
+client = wrap_openai(OpenAI(
   api_key=os.getenv("GEMINI_API_KEY"),
   base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
-)
+))
 
-
+@traceable
 def get_weather(city: str):
   print("🔨: get_weather tool called, input : ", city)
   
